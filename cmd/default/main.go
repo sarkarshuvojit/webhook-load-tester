@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
+)
 
 func main() {
-	fmt.Println("hello, world")
+	wt := types.NewDefaultWebhookTester()
+	wt.InitTestSetup()
 }
