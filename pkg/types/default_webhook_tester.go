@@ -170,7 +170,7 @@ func (wt *DefaultWebhookTester) PostProcess() error {
 
 // WaitForResults implements WebhookTester.
 func (wt *DefaultWebhookTester) WaitForResults() error {
-	slog.Info("Started watiting for it to finish")
+	slog.Info("Started waiting for it to finish")
 	wt.requestsWg.Wait()
 	slog.Info("Waiting comes to an end")
 	return nil
