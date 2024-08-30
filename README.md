@@ -2,6 +2,8 @@
 
 ![Overview](docs/overview.png "Overview of design")
 
+[![asciicast](https://asciinema.org/a/iPDFUjZSNDOpd2o9sgtI9tcpj.svg)](https://asciinema.org/a/iPDFUjZSNDOpd2o9sgtI9tcpj)
+
 
 ## Setting up locally
 
