@@ -2,12 +2,13 @@ version: v1
 
 tests:
   - name: test-api-1
-    url: http://localhost:8080/api1
+    url: http://localhost:8080/
     body: "{\"message\": \"ok\"}"
     injectors:
-      correlationInjector:
+      replyPathInjector:
         path: "headers.webhook-reply-to"
-        use: UUID
+      correlationIdInjector:
+        path: "body.correlationId"
     pickers:
       correlationPicker:
         path: "body.correlationId"
