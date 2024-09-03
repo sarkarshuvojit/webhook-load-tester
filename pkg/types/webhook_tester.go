@@ -10,3 +10,11 @@ type WebhookTester interface {
 	WaitForResults() error
 	PostProcess() error
 }
+
+type WebhookTesterv2 interface {
+	LoadConfig() error
+	StartReceiver() (context.CancelFunc, error)
+	FireRequests() error
+	WaitForResults() error
+	PostProcess() error
+}

@@ -17,7 +17,6 @@ var isVerbose bool
 var configPath string
 
 func setupFlags() {
-
 	flag.BoolVar(&isVerbose, "v", false, "Enable Verbosity")
 	flag.StringVar(&configPath, "f", "wlt-run-defatult.yaml", "Path to your test config file")
 	flag.Parse()
@@ -69,4 +68,14 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Debug("Starting with config", "config", config)
+
+	wt := types.NewDefaultWebhookTesterv2(config)
+	if err = wt.LoadConfig(); err != nil {
+		utils.PPrinter.Error("Failed to load config: ", err.Error())
+		os.Exit(1)
+	}
+
+	wt.StartReceiver()
+	wt.FireRequests()
+	wt.WaitForResults()
 }
