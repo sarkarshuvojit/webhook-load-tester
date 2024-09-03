@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"io"
 	"log/slog"
 	"os"
 	"strings"
@@ -23,15 +24,13 @@ func setupFlags() {
 }
 
 func setupLogger(isVerbose bool) {
-	var newLevel slog.Level
 	if *&isVerbose {
-		newLevel = slog.LevelDebug
+		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		})))
 	} else {
-		newLevel = slog.LevelInfo
+		slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{})))
 	}
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: newLevel,
-	})))
 }
 
 func initialize() {
@@ -67,6 +66,7 @@ func main() {
 		utils.PPrinter.Error("Failed due to: ", err.Error())
 		os.Exit(1)
 	}
+	utils.PPrinter.Info("Config loaded successfully...")
 	slog.Debug("Starting with config", "config", config)
 
 	wt := types.NewDefaultWebhookTesterv2(config)
@@ -75,7 +75,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	utils.PPrinter.Info("Started receiver...")
 	wt.StartReceiver()
+	utils.PPrinter.Info("Firing requests...")
 	wt.FireRequests()
+	utils.PPrinter.Info("Waiting for responses...")
 	wt.WaitForResults()
+	utils.PPrinter.Info("Got replies for 100% requests sent...")
 }
