@@ -71,7 +71,7 @@ func main() {
 
 	wt := types.NewDefaultWebhookTesterv2(config)
 	if err = wt.LoadConfig(); err != nil {
-		utils.PPrinter.Error("Failed to load config: ", err.Error())
+		utils.PPrinter.Error("Failed to load config due to: %v", err.Error())
 		os.Exit(1)
 	}
 

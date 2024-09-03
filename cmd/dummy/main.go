@@ -36,6 +36,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		sleepRandomly(5, 10)
 		// Forward the request body to the `webhook-reply-to` URL with a POST request
+		slog.Info("Sending response", "replyUrl", replyToURL, "body", body)
 		resp, err := http.Post(replyToURL, r.Header.Get("Content-Type"), bytes.NewReader(body))
 		if err != nil {
 			http.Error(w, "Failed to forward request", http.StatusInternalServerError)

@@ -8,10 +8,10 @@ test:
     replyPathInjector:
       path: "headers.webhook-reply-to"
     correlationIdInjector:
-      path: "body.correlationId"
+      path: "body.uniqueId"
   pickers:
     correlationPicker:
-      path: "body.correlationId"
+      path: "body.uniqueId"
 
 run:
   iterations: 50
