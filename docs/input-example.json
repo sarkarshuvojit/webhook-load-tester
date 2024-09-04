@@ -1,0 +1,31 @@
+{
+  "version": "v1",
+  "test": {
+  "name": "test-api-1",
+  "url": "http://localhost:8080/api",
+  "body": "{\"message\": \"ok\"}",
+  "injectors": {
+    "replyPathInjector": {
+      "path": "headers.webhook-reply-to"
+    },
+    "correlationIdInjector": {
+      "path": "body.correlationId"
+    }
+  },
+  "pickers": {
+    "correlationPicker": {
+      "path": "body.correlationId"
+    }
+  }
+},
+  "run": {
+    "iterations": 50,
+    "durationSeconds": 10
+  },
+  "outputs": [
+    {
+      "type": "text",
+      "path": "out.txt"
+    }
+  ]
+}
