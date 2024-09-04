@@ -24,8 +24,8 @@ type internalConfig struct {
 }
 
 type DefaultWebhookTesterv2 struct {
-	config         *InputConfig
-	internalConfig *internalConfig
+	config   *InputConfig
+	internal *internalConfig
 }
 
 func (wt *DefaultWebhookTesterv2) receiverHandler(w http.ResponseWriter, r *http.Request) {
@@ -43,22 +43,22 @@ func (wt *DefaultWebhookTesterv2) receiverHandler(w http.ResponseWriter, r *http
 	if wt.config.Test.Pickers.CorrelationPicker.GetRootType() == RootBody {
 		correlationId = resMap[wt.config.Test.Pickers.CorrelationPicker.GetKey()]
 	}
-	_tracker := wt.internalConfig.reqTracker[correlationId]
+	_tracker := wt.internal.reqTracker[correlationId]
 	_tracker.EndTime = time.Now()
 
 	slog.Debug("Updating tracker", "key", correlationId, "value", _tracker)
-	wt.internalConfig.reqTracker[correlationId] = _tracker
-	wt.internalConfig.requestWg.Done()
+	wt.internal.reqTracker[correlationId] = _tracker
+	wt.internal.requestWg.Done()
 }
 
 // FireRequests implements WebhookTesterv2.
 func (wt *DefaultWebhookTesterv2) FireRequests() error {
-	wt.internalConfig.requestWg.Add(wt.config.Run.Iterations)
+	wt.internal.requestWg.Add(wt.config.Run.Iterations)
 
 	for i := 0; i < wt.config.Run.Iterations; i++ {
 		correlationId := uuid.New().String()
 
-		wt.internalConfig.reqTracker[correlationId] = RequestTrackerPair{
+		wt.internal.reqTracker[correlationId] = RequestTrackerPair{
 			StartTime: time.Now(),
 		}
 
@@ -80,7 +80,7 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 
 			if injectors.ReplyPathInjector.GetRootType() == RootBody {
 				slog.Debug("Setting replyPath to body", "key", injectors.ReplyPathInjector.GetKey())
-				tmp[injectors.ReplyPathInjector.GetKey()] = wt.internalConfig.selfUrl
+				tmp[injectors.ReplyPathInjector.GetKey()] = wt.internal.selfUrl
 			}
 
 			reqBodyBytes, err = json.Marshal(tmp)
@@ -115,7 +115,7 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 			slog.Debug("ReplyPathInjector", "path", injectors.ReplyPathInjector.Path)
 			if injectors.ReplyPathInjector.GetRootType() == RootHeader {
 				slog.Debug("Setting replyPath to header", "key", injectors.ReplyPathInjector.GetKey())
-				req.Header.Add(injectors.ReplyPathInjector.GetKey(), wt.internalConfig.selfUrl)
+				req.Header.Add(injectors.ReplyPathInjector.GetKey(), wt.internal.selfUrl)
 			}
 
 			res, err := http.DefaultClient.Do(req)
@@ -132,7 +132,7 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 		}()
 
 		slog.Debug("Going to sleep")
-		time.Sleep(wt.internalConfig.iterGap)
+		time.Sleep(wt.internal.iterGap)
 		slog.Debug("Woke up")
 	}
 	slog.Info("Requests fired...")
@@ -170,7 +170,7 @@ func (wt *DefaultWebhookTesterv2) StartReceiver() (context.CancelFunc, error) {
 	mux.Handle("/", http.HandlerFunc(wt.receiverHandler))
 
 	server := &http.Server{Addr: ":8081", Handler: mux}
-	wt.internalConfig.selfUrl = "http://localhost:8081/"
+	wt.internal.selfUrl = "http://localhost:8081/"
 
 	cancelContext, stopReceiver := context.WithCancel(context.Background())
 	go func() {
@@ -198,7 +198,7 @@ func (wt *DefaultWebhookTesterv2) StartReceiver() (context.CancelFunc, error) {
 // WaitForResults implements WebhookTesterv2.
 func (wt *DefaultWebhookTesterv2) WaitForResults() error {
 	slog.Info("Waiting for results...")
-	wt.internalConfig.requestWg.Wait()
+	wt.internal.requestWg.Wait()
 	return nil
 }
 
@@ -213,7 +213,7 @@ func NewDefaultWebhookTesterv2(config *InputConfig) *DefaultWebhookTesterv2 {
 
 func (wt2 *DefaultWebhookTesterv2) setup() {
 	iterGap := time.Duration((wt2.config.Run.DurationSeconds*1000)/wt2.config.Run.Iterations) * time.Millisecond
-	wt2.internalConfig = &internalConfig{
+	wt2.internal = &internalConfig{
 		selfUrl:    "http://localhost:8081/",
 		iterGap:    iterGap,
 		requestWg:  sync.WaitGroup{},
