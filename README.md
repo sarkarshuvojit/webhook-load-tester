@@ -27,19 +27,14 @@ $ make start_dummy
 
 Start the actual tester
 
-#### Using Make
-
-```bash
-$ make run
-```
-
 #### Using Go
 
 ```bash
-$ go run cmd/default/main.go
-$ go run -version cmd/default/main.go # for verbose output
+$ go run cmd/runtest/main.go -v -f docs/input-example.yml
+$ go run cmd/runtest/main.go -f docs/input-example.yml # for verbose output
 ```
 
 ## TODO
 
+- Use Ngrok instead of go/http to start receiver
 - Timeout for watiting to prevent deadlock when downstream fails to reply to few requests
