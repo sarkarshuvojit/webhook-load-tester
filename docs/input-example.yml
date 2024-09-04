@@ -4,6 +4,9 @@ test:
   name: test-api-1
   url: http://localhost:8080/
   body: "{\"message\": \"ok\"}"
+  headers:
+    client-id: gg
+    client-secret: wp
   injectors:
     replyPathInjector:
       path: "headers.webhook-reply-to"

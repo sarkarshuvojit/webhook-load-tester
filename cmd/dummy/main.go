@@ -25,6 +25,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_clientId := r.Header.Get("client-id")
+	if _clientId == "" {
+		http.Error(w, "Missing 'client-id' header", http.StatusBadRequest)
+		return
+	}
+
+	_secret := r.Header.Get("client-secret")
+	if _secret == "" {
+		http.Error(w, "Missing 'client-secret' header", http.StatusBadRequest)
+		return
+	}
+
 	// Read the request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

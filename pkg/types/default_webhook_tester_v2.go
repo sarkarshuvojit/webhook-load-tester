@@ -99,6 +99,14 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 				return err
 			}
 
+			// Add Test related custom headers
+			customheaders := wt.config.Test.Headers
+			if len(wt.config.Test.Headers) != 0 {
+				for k, v := range customheaders {
+					req.Header.Add(k, v)
+				}
+			}
+
 			if injectors.CorrelationIDInjector.GetRootType() == RootHeader {
 				slog.Debug("Setting correlation to header")
 				req.Header.Add(injectors.CorrelationIDInjector.GetKey(), correlationId)

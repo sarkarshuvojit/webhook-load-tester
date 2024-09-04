@@ -35,9 +35,10 @@ func (l Locator) GetKey() string {
 }
 
 type TestConfig struct {
-	Name      string `yaml:"name"`
-	URL       string `yaml:"url"`
-	Body      string `yaml:"body"`
+	Name      string            `yaml:"name"`
+	URL       string            `yaml:"url"`
+	Body      string            `yaml:"body"`
+	Headers   map[string]string `yaml:"headers"`
 	Injectors struct {
 		ReplyPathInjector     Locator `yaml:"replyPathInjector"`
 		CorrelationIDInjector Locator `yaml:"correlationIdInjector"`
