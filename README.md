@@ -12,6 +12,57 @@ But what if you need to load test your apis and well, and get and idea of how lo
 
 [![asciicast](https://asciinema.org/a/iPDFUjZSNDOpd2o9sgtI9tcpj.svg)](https://asciinema.org/a/iPDFUjZSNDOpd2o9sgtI9tcpj)
 
+## Configuration 
+
+It uses configuration files to run tests, where tests & load can be defined using a declarative yaml format.
+
+Following is an example test config which can be used against the dummy webhook api.
+
+```yaml
+version: v1
+
+test:
+  name: test-api-1
+  
+  # details about api which needs to be tested
+  url: http://localhost:8080/
+  body: "{\"message\": \"ok\"}"
+  headers:
+    client-id: gg
+    client-secret: wp
+  
+  # injectors are used to update user defined requests with test-related variables
+  injectors:
+
+    # injects the reply-path to a specific path in the requests
+    # when running locally it will use Ngrok url
+    # when running on a public server it will use localhost or userDefinedHost
+    replyPathInjector:
+      path: "headers.webhook-reply-to"
+    
+    # injects the correlationId/traceId to the request
+    correlationIdInjector:
+      path: "body.uniqueId"
+
+  # pickers are used to figure out where to pick specific info from the response
+  pickers:
+    # defines where to expect the correlationId/traceId when the downstream gives a callback
+    correlationPicker:
+      path: "body.uniqueId"
+
+# actual run configuration 
+# defines how many requests need to be fired over the span of how many seconds
+# in the following example we can expect a request to be fired every 200ms (10s/50r)
+run:
+  iterations: 50
+  durationSeconds: 10
+
+# defines where and in which format the analysis output should go to
+# analysis comprises of max, min, avg, etc
+outputs:
+  - type: text
+    path: out.txt
+```
 
 ## Setting up locally
 
