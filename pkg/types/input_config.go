@@ -50,6 +50,7 @@ type TestConfig struct {
 
 type InputConfig struct {
 	Version string     `yaml:"version"`
+	Server  string     `yaml:"server"`
 	Test    TestConfig `yaml:"test"`
 	Run     struct {
 		Iterations      int `yaml:"iterations"`

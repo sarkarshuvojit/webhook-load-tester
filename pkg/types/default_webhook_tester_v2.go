@@ -6,17 +6,24 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/google/uuid"
+	"golang.ngrok.com/ngrok"
+	"golang.ngrok.com/ngrok/config"
 )
 
 type internalConfig struct {
-	targetUrl string
-	selfUrl   string
+	targetUrl   string
+	selfUrl     string
+	selfUrlChan chan string
 
 	iterGap    time.Duration
 	requestWg  sync.WaitGroup
@@ -54,6 +61,9 @@ func (wt *DefaultWebhookTesterv2) receiverHandler(w http.ResponseWriter, r *http
 // FireRequests implements WebhookTesterv2.
 func (wt *DefaultWebhookTesterv2) FireRequests() error {
 	wt.internal.requestWg.Add(wt.config.Run.Iterations)
+	slog.Info("Waiting for server to be ready")
+	serverURL := <-wt.internal.selfUrlChan
+	slog.Debug("Server ready", "addr", serverURL)
 
 	for i := 0; i < wt.config.Run.Iterations; i++ {
 		correlationId := uuid.New().String()
@@ -164,8 +174,7 @@ func (*DefaultWebhookTesterv2) PostProcess() error {
 	panic("unimplemented")
 }
 
-// StartReceiver implements WebhookTesterv2.
-func (wt *DefaultWebhookTesterv2) StartReceiver() (context.CancelFunc, error) {
+func (wt *DefaultWebhookTesterv2) startHttpServer() (context.CancelFunc, error) {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(wt.receiverHandler))
 
@@ -195,10 +204,73 @@ func (wt *DefaultWebhookTesterv2) StartReceiver() (context.CancelFunc, error) {
 	return stopReceiver, nil
 }
 
+func (wt *DefaultWebhookTesterv2) startNgrokServer() (context.CancelFunc, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		// Handle system interrupts and termination signals
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		defer signal.Stop(sigCh)
+
+		// Initialize the ngrok listener
+		listener, err := ngrok.Listen(ctx,
+			config.HTTPEndpoint(),
+			ngrok.WithAuthtokenFromEnv(),
+		)
+		if err != nil {
+			slog.Error("Error setting up ngrok:", err)
+			os.Exit(1)
+			return
+		}
+
+		slog.Debug("Ingress established at:", "addr", listener.URL())
+		wt.internal.selfUrl = listener.URL()
+		wt.internal.selfUrlChan <- listener.URL()
+		// Start HTTP server
+		err = http.Serve(listener, http.HandlerFunc(wt.receiverHandler))
+		if err != nil {
+			log.Println("HTTP server error:", err)
+		}
+
+		// Listen for system interrupts
+		select {
+		case <-sigCh:
+			log.Println("Received shutdown signal")
+		case <-ctx.Done():
+			log.Println("Context cancelled")
+		}
+	}()
+
+	slog.Info("Initialised receiver...")
+	return cancel, nil
+}
+
+// StartReceiver implements WebhookTesterv2.
+func (wt *DefaultWebhookTesterv2) StartReceiver() (cancelFunc context.CancelFunc, err error) {
+	if wt.config.Server == "ngrok" {
+		cancelFunc, err = wt.startNgrokServer()
+	} else {
+		cancelFunc, err = wt.startHttpServer()
+	}
+	return
+}
+
 // WaitForResults implements WebhookTesterv2.
 func (wt *DefaultWebhookTesterv2) WaitForResults() error {
 	slog.Info("Waiting for results...")
-	wt.internal.requestWg.Wait()
+	timeout := time.Duration(1) * time.Minute
+	waitingFinished := make(chan bool)
+	go func() {
+		wt.internal.requestWg.Wait()
+		waitingFinished <- true
+	}()
+	select {
+	case <-waitingFinished:
+		slog.Info("Finished waiting within timeout")
+	case <-time.After(timeout):
+		slog.Info("Timed out while waiting for 2mins")
+	}
 	return nil
 }
 
@@ -214,10 +286,10 @@ func NewDefaultWebhookTesterv2(config *InputConfig) *DefaultWebhookTesterv2 {
 func (wt2 *DefaultWebhookTesterv2) setup() {
 	iterGap := time.Duration((wt2.config.Run.DurationSeconds*1000)/wt2.config.Run.Iterations) * time.Millisecond
 	wt2.internal = &internalConfig{
-		selfUrl:    "http://localhost:8081/",
-		iterGap:    iterGap,
-		requestWg:  sync.WaitGroup{},
-		reqTracker: map[string]RequestTrackerPair{},
+		iterGap:     iterGap,
+		requestWg:   sync.WaitGroup{},
+		reqTracker:  map[string]RequestTrackerPair{},
+		selfUrlChan: make(chan string, 1),
 	}
 }
 
