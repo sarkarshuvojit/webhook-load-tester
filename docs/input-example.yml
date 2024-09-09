@@ -1,5 +1,6 @@
 version: v1
 
+
 test:
   name: test-api-1
   url: http://localhost:8080/
@@ -23,3 +24,5 @@ run:
 outputs:
   - type: text
     path: out.txt
+
+server: ngrok

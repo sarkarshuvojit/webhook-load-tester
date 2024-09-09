@@ -21,6 +21,8 @@ Following is an example test config which can be used against the dummy webhook 
 ```yaml
 version: v1
 
+server: ngrok # optional param
+
 test:
   name: test-api-1
   
@@ -87,5 +89,4 @@ $ go run cmd/runtest/main.go -f docs/input-example.yml # for verbose output
 
 ## TODO
 
-- Use Ngrok instead of go/http to start receiver
-- Timeout for watiting to prevent deadlock when downstream fails to reply to few requests
+- Safe shutdown
