@@ -17,8 +17,30 @@ func sleepRandomly(minSleep, maxSleep int) {
 	time.Sleep(time.Duration(minSleep+randSleep) * time.Second)
 	slog.Info("Slept", "ttl", minSleep+randSleep)
 }
+
+func dumpHttpDetails(r *http.Request) {
+	// Log request headers
+	fmt.Println("Request Headers:")
+	for name, values := range r.Header {
+		for _, value := range values {
+			fmt.Printf("%s: %s\n", name, value)
+		}
+	}
+
+	// Log request body
+	fmt.Println("Request Body:")
+	// Read and log the body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("Error reading body:", err)
+		return
+	}
+	fmt.Println(string(body))
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	// Read the `webhook-reply-to` header
+	dumpHttpDetails(r)
 	replyToURL := r.Header.Get("webhook-reply-to")
 	if replyToURL == "" {
 		http.Error(w, "Missing 'webhook-reply-to' header", http.StatusBadRequest)

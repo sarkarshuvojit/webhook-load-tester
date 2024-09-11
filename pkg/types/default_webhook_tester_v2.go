@@ -41,14 +41,14 @@ func (wt *DefaultWebhookTesterv2) receiverHandler(w http.ResponseWriter, r *http
 	slog.Debug("Received New Message", "body", reqBodyStr)
 	// pick correlationId
 	// save in common concurrent hashmap
-	var resMap map[string]string
+	var resMap map[string]interface{}
 	err := json.Unmarshal(bytedata, &resMap)
 	if err != nil {
 		panic(err)
 	}
 	var correlationId string
 	if wt.config.Test.Pickers.CorrelationPicker.GetRootType() == RootBody {
-		correlationId = resMap[wt.config.Test.Pickers.CorrelationPicker.GetKey()]
+		correlationId = *wt.config.Test.Pickers.CorrelationPicker.GetByLocator(&resMap)
 	}
 	_tracker := wt.internal.reqTracker[correlationId]
 	_tracker.EndTime = time.Now()
@@ -85,12 +85,18 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 
 			if injectors.CorrelationIDInjector.GetRootType() == RootBody {
 				slog.Debug("Setting correlationId to body", "key", injectors.CorrelationIDInjector.GetKey())
-				tmp[injectors.CorrelationIDInjector.GetKey()] = correlationId
+				injectors.CorrelationIDInjector.SetToLocator(
+					&tmp,
+					correlationId,
+				)
 			}
 
 			if injectors.ReplyPathInjector.GetRootType() == RootBody {
 				slog.Debug("Setting replyPath to body", "key", injectors.ReplyPathInjector.GetKey())
-				tmp[injectors.ReplyPathInjector.GetKey()] = wt.internal.selfUrl
+				injectors.ReplyPathInjector.SetToLocator(
+					&tmp,
+					wt.internal.selfUrl,
+				)
 			}
 
 			reqBodyBytes, err = json.Marshal(tmp)
@@ -119,12 +125,17 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 
 			if injectors.CorrelationIDInjector.GetRootType() == RootHeader {
 				slog.Debug("Setting correlation to header")
-				req.Header.Add(injectors.CorrelationIDInjector.GetKey(), correlationId)
+				req.Header.Add(
+					injectors.CorrelationIDInjector.GetKey(),
+					correlationId,
+				)
 			}
 
-			slog.Debug("ReplyPathInjector", "path", injectors.ReplyPathInjector.Path)
 			if injectors.ReplyPathInjector.GetRootType() == RootHeader {
-				slog.Debug("Setting replyPath to header", "key", injectors.ReplyPathInjector.GetKey())
+				slog.Debug(
+					"Setting replyPath to header",
+					"key", injectors.ReplyPathInjector.GetKey(),
+				)
 				req.Header.Add(injectors.ReplyPathInjector.GetKey(), wt.internal.selfUrl)
 			}
 
