@@ -1,12 +1,41 @@
 # webhook-load-tester
 
-If you have ever created a webhook based async API, you might have run into issues with integration testing it. 
+## What is this?
 
-The main problem in this case is that the code which calls the API never recieves the response in the same block.
+This tool helps developers test and load test asynchronous APIs that use webhooks. It's especially useful when you're working with APIs where the response comes later through a webhook, rather than immediately.
 
-The easiest solution is to create a mock server which can display all requests coming to it; using a tool like Postman, Beeceptor, etc. 
+## Why use it?
 
-But what if you need to load test your apis and well, and get and idea of how long the whole flow takes; i.e. from the point when the client aka another server calling your api till the time your server responds at their webhook url
+Testing webhook-based APIs can be tricky because:
+1. The API call and the webhook response happen at different times.
+2. It's hard to measure the total time from the initial call to the webhook response.
+3. Load testing these APIs is challenging with traditional tools.
+
+## How does it work?
+
+1. **Mock Server**: Acts as a stand-in for your actual server, receiving and displaying incoming webhook requests.
+
+2. **Configuration-based Testing**: Uses YAML files to define tests and load scenarios, making it easy to set up and modify test cases.
+
+3. **End-to-End Timing**: Measures the complete flow from the initial API call to the webhook response, giving you a clear picture of your API's performance.
+
+4. **Load Testing**: Allows you to simulate multiple users or high traffic scenarios to see how your API performs under stress.
+
+## Key Features
+
+- Easy-to-use YAML configuration for test scenarios
+- Built-in mock server to capture webhook responses
+- Comprehensive timing measurements for the entire API flow
+- Support for load testing asynchronous APIs
+- Clear, visual representation of test results
+
+## Who is it for?
+
+- Developers working with webhook-based APIs
+- QA engineers testing asynchronous systems
+- DevOps professionals managing API performance
+
+## Design
 
 ![Overview](docs/overview.png "Overview of design")
 
