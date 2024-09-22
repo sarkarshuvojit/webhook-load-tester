@@ -36,6 +36,7 @@ func dumpHttpDetails(r *http.Request) {
 		return
 	}
 	fmt.Println(string(body))
+	r.Body = io.NopCloser(bytes.NewReader(body))
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +67,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+	slog.Debug("Request Body:", "body", body)
 
 	go func() {
 		sleepRandomly(5, 10)
