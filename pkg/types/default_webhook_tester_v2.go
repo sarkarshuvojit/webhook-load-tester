@@ -15,15 +15,19 @@ import (
 	"syscall"
 	"time"
 
+	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
 	"github.com/google/uuid"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
 )
 
+var DEFAULT_WAITING_TIMEOUT = time.Duration(30) * time.Second
+
 type internalConfig struct {
-	targetUrl   string
-	selfUrl     string
-	selfUrlChan chan string
+	targetUrl     string
+	selfUrl       string
+	selfUrlChan   chan string
+	requestsFired chan bool
 
 	iterGap    time.Duration
 	requestWg  sync.WaitGroup
@@ -148,7 +152,7 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 			if err != nil {
 				return err
 			}
-			slog.Debug("Request Sent", "resBody", resBody)
+			slog.Debug("Request Sent", "req", req, "resBody", resBody)
 			return nil
 		}()
 
@@ -211,6 +215,8 @@ func (wt *DefaultWebhookTesterv2) startHttpServer() (context.CancelFunc, error) 
 		}
 	}()
 
+	wt.internal.selfUrl = "http://localhost:8081/"
+	wt.internal.selfUrlChan <- "http://localhost:8081/"
 	slog.Info("Initialised receiver...")
 	return stopReceiver, nil
 }
@@ -269,8 +275,9 @@ func (wt *DefaultWebhookTesterv2) StartReceiver() (cancelFunc context.CancelFunc
 
 // WaitForResults implements WebhookTesterv2.
 func (wt *DefaultWebhookTesterv2) WaitForResults() error {
-	slog.Info("Waiting for results...")
-	timeout := time.Duration(1) * time.Minute
+	utils.PPrinter.Info("Started waiting for results...")
+	timeout := time.Duration(wt.config.Test.Timeout) * time.Second
+	slog.Info("Waiting for results...", "timeout", timeout)
 	waitingFinished := make(chan bool)
 	go func() {
 		wt.internal.requestWg.Wait()
@@ -280,7 +287,8 @@ func (wt *DefaultWebhookTesterv2) WaitForResults() error {
 	case <-waitingFinished:
 		slog.Info("Finished waiting within timeout")
 	case <-time.After(timeout):
-		slog.Info("Timed out while waiting for 2mins")
+		slog.Error("Timed out while waiting for 2mins")
+		return TimedOutWaitingForResultsErr
 	}
 	return nil
 }
@@ -297,11 +305,19 @@ func NewDefaultWebhookTesterv2(config *InputConfig) *DefaultWebhookTesterv2 {
 func (wt2 *DefaultWebhookTesterv2) setup() {
 	iterGap := time.Duration((wt2.config.Run.DurationSeconds*1000)/wt2.config.Run.Iterations) * time.Millisecond
 	wt2.internal = &internalConfig{
-		iterGap:     iterGap,
-		requestWg:   sync.WaitGroup{},
-		reqTracker:  map[string]RequestTrackerPair{},
-		selfUrlChan: make(chan string, 1),
+		iterGap:       iterGap,
+		requestWg:     sync.WaitGroup{},
+		reqTracker:    map[string]RequestTrackerPair{},
+		selfUrlChan:   make(chan string, 1),
+		requestsFired: make(chan bool, 1),
 	}
+
+	if wt2.config.Test.Timeout == 0 {
+		wt2.config.Test.Timeout = int(DEFAULT_WAITING_TIMEOUT.Seconds())
+	}
+
+	configStr, _ := json.MarshalIndent(wt2.config, "", "  ")
+	slog.Debug(string(configStr))
 }
 
 var _ WebhookTesterv2 = (*DefaultWebhookTesterv2)(nil)

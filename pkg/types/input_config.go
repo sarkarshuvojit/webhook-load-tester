@@ -1,6 +1,8 @@
 package types
 
-import "strings"
+import (
+	"strings"
+)
 
 type RootType = int
 
@@ -116,6 +118,7 @@ type TestConfig struct {
 	Pickers struct {
 		CorrelationPicker Locator `yaml:"correlationPicker"`
 	} `yaml:"pickers"`
+	Timeout int `yaml:"timeout"`
 }
 
 type InputConfig struct {
