@@ -1,10 +1,10 @@
 version: v1
 
-
 test:
   name: test-api-1
   url: http://localhost:8080/
   body: "{\"message\": \"ok\"}"
+  timeout: 5
   headers:
     client-id: gg
     client-secret: wp
@@ -25,4 +25,4 @@ outputs:
   - type: text
     path: out.txt
 
-server: ngrok
+# server: ngrok

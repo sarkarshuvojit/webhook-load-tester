@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
@@ -16,6 +18,8 @@ import (
 
 var isVerbose bool
 var configPath string
+
+var DEFAULT_WAITING_TIMEOUT = time.Duration(30) * time.Second
 
 func setupFlags() {
 	flag.BoolVar(&isVerbose, "v", false, "Enable Verbosity")
@@ -36,6 +40,13 @@ func setupLogger(isVerbose bool) {
 func initialize() {
 	setupFlags()
 	setupLogger(isVerbose)
+
+}
+
+func setDefaults(config *types.InputConfig) {
+	if config.Test.Timeout == 0 {
+		config.Test.Timeout = int(DEFAULT_WAITING_TIMEOUT.Seconds())
+	}
 }
 
 func loadConfig(filepath string) (*types.InputConfig, error) {
@@ -55,6 +66,9 @@ func loadConfig(filepath string) (*types.InputConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	setDefaults(&config)
+
 	return &config, nil
 }
 
@@ -79,7 +93,10 @@ func main() {
 	wt.StartReceiver()
 	utils.PPrinter.Info("Firing requests...")
 	wt.FireRequests()
-	utils.PPrinter.Info("Waiting for responses...")
-	wt.WaitForResults()
-	utils.PPrinter.Info("Got replies for 100% requests sent...")
+	utils.PPrinter.Info(fmt.Sprintf("Waiting for responses for %ds...", config.Test.Timeout))
+	if err := wt.WaitForResults(); err != nil {
+		utils.PPrinter.Warning(fmt.Sprintf("Timed out waiting for %ds", config.Test.Timeout))
+	} else {
+		utils.PPrinter.Success("Received webhook responses within timeout.")
+	}
 }
