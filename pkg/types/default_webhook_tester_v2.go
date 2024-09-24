@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
+	"com.github/sarkarshuvojit/webhook-load-tester/pkg/tracker"
 	"github.com/google/uuid"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
@@ -31,15 +32,15 @@ type internalConfig struct {
 
 	iterGap    time.Duration
 	requestWg  sync.WaitGroup
-	reqTracker map[string]RequestTrackerPair
+	reqTracker *tracker.Tracker
 }
 
-type DefaultWebhookTesterv2 struct {
+type DefaultWebhookTester struct {
 	config   *InputConfig
 	internal *internalConfig
 }
 
-func (wt *DefaultWebhookTesterv2) receiverHandler(w http.ResponseWriter, r *http.Request) {
+func (wt *DefaultWebhookTester) receiverHandler(w http.ResponseWriter, r *http.Request) {
 	bytedata, _ := io.ReadAll(r.Body)
 	reqBodyStr := string(bytedata)
 	slog.Debug("Received New Message", "body", reqBodyStr)
@@ -54,16 +55,16 @@ func (wt *DefaultWebhookTesterv2) receiverHandler(w http.ResponseWriter, r *http
 	if wt.config.Test.Pickers.CorrelationPicker.GetRootType() == RootBody {
 		correlationId = *wt.config.Test.Pickers.CorrelationPicker.GetByLocator(&resMap)
 	}
-	_tracker := wt.internal.reqTracker[correlationId]
+	_tracker := wt.internal.reqTracker.Get(correlationId)
 	_tracker.EndTime = time.Now()
 
 	slog.Debug("Updating tracker", "key", correlationId, "value", _tracker)
-	wt.internal.reqTracker[correlationId] = _tracker
+	wt.internal.reqTracker.Set(correlationId, _tracker)
 	wt.internal.requestWg.Done()
 }
 
 // FireRequests implements WebhookTesterv2.
-func (wt *DefaultWebhookTesterv2) FireRequests() error {
+func (wt *DefaultWebhookTester) FireRequests() error {
 	wt.internal.requestWg.Add(wt.config.Run.Iterations)
 	slog.Info("Waiting for server to be ready")
 	serverURL := <-wt.internal.selfUrlChan
@@ -72,9 +73,9 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 	for i := 0; i < wt.config.Run.Iterations; i++ {
 		correlationId := uuid.New().String()
 
-		wt.internal.reqTracker[correlationId] = RequestTrackerPair{
+		wt.internal.reqTracker.Set(correlationId, tracker.RequestTrackerPair{
 			StartTime: time.Now(),
-		}
+		})
 
 		go func() error {
 			var tmp map[string]interface{}
@@ -166,7 +167,7 @@ func (wt *DefaultWebhookTesterv2) FireRequests() error {
 
 // LoadConfig implements WebhookTesterv2.
 // validate and throw results
-func (wt *DefaultWebhookTesterv2) LoadConfig() error {
+func (wt *DefaultWebhookTester) LoadConfig() error {
 	slog.Info("Loading and validating config...")
 	injectors := wt.config.Test.Injectors
 	if corrRootType := injectors.CorrelationIDInjector.GetRootType(); corrRootType == RootUnknown {
@@ -185,11 +186,11 @@ func (wt *DefaultWebhookTesterv2) LoadConfig() error {
 }
 
 // PostProcess implements WebhookTesterv2.
-func (*DefaultWebhookTesterv2) PostProcess() error {
+func (*DefaultWebhookTester) PostProcess() error {
 	panic("unimplemented")
 }
 
-func (wt *DefaultWebhookTesterv2) startHttpServer() (context.CancelFunc, error) {
+func (wt *DefaultWebhookTester) startHttpServer() (context.CancelFunc, error) {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(wt.receiverHandler))
 
@@ -221,7 +222,7 @@ func (wt *DefaultWebhookTesterv2) startHttpServer() (context.CancelFunc, error) 
 	return stopReceiver, nil
 }
 
-func (wt *DefaultWebhookTesterv2) startNgrokServer() (context.CancelFunc, error) {
+func (wt *DefaultWebhookTester) startNgrokServer() (context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -264,7 +265,7 @@ func (wt *DefaultWebhookTesterv2) startNgrokServer() (context.CancelFunc, error)
 }
 
 // StartReceiver implements WebhookTesterv2.
-func (wt *DefaultWebhookTesterv2) StartReceiver() (cancelFunc context.CancelFunc, err error) {
+func (wt *DefaultWebhookTester) StartReceiver() (cancelFunc context.CancelFunc, err error) {
 	if wt.config.Server == "ngrok" {
 		cancelFunc, err = wt.startNgrokServer()
 	} else {
@@ -274,7 +275,7 @@ func (wt *DefaultWebhookTesterv2) StartReceiver() (cancelFunc context.CancelFunc
 }
 
 // WaitForResults implements WebhookTesterv2.
-func (wt *DefaultWebhookTesterv2) WaitForResults() error {
+func (wt *DefaultWebhookTester) WaitForResults() error {
 	utils.PPrinter.Info("Started waiting for results...")
 	timeout := time.Duration(wt.config.Test.Timeout) * time.Second
 	slog.Info("Waiting for results...", "timeout", timeout)
@@ -293,8 +294,8 @@ func (wt *DefaultWebhookTesterv2) WaitForResults() error {
 	return nil
 }
 
-func NewDefaultWebhookTesterv2(config *InputConfig) *DefaultWebhookTesterv2 {
-	wt := &DefaultWebhookTesterv2{
+func NewDefaultWebhookTester(config *InputConfig) *DefaultWebhookTester {
+	wt := &DefaultWebhookTester{
 		config: config,
 	}
 	wt.setup()
@@ -302,12 +303,12 @@ func NewDefaultWebhookTesterv2(config *InputConfig) *DefaultWebhookTesterv2 {
 	return wt
 }
 
-func (wt2 *DefaultWebhookTesterv2) setup() {
+func (wt2 *DefaultWebhookTester) setup() {
 	iterGap := time.Duration((wt2.config.Run.DurationSeconds*1000)/wt2.config.Run.Iterations) * time.Millisecond
 	wt2.internal = &internalConfig{
 		iterGap:       iterGap,
 		requestWg:     sync.WaitGroup{},
-		reqTracker:    map[string]RequestTrackerPair{},
+		reqTracker:    tracker.NewRequestTracker(),
 		selfUrlChan:   make(chan string, 1),
 		requestsFired: make(chan bool, 1),
 	}
@@ -320,4 +321,4 @@ func (wt2 *DefaultWebhookTesterv2) setup() {
 	slog.Debug(string(configStr))
 }
 
-var _ WebhookTesterv2 = (*DefaultWebhookTesterv2)(nil)
+var _ WebhookTester = (*DefaultWebhookTester)(nil)
