@@ -1,4 +1,4 @@
-package types
+package webhook_tester
 
 import "context"
 

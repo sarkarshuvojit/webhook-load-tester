@@ -1,4 +1,4 @@
-package types
+package webhook_tester
 
 import (
 	"bytes"
@@ -17,6 +17,7 @@ import (
 
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/reporter"
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/tracker"
+	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
 	"github.com/google/uuid"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
@@ -36,7 +37,7 @@ type internalConfig struct {
 }
 
 type DefaultWebhookTester struct {
-	config   *InputConfig
+	config   *types.InputConfig
 	internal *internalConfig
 }
 
@@ -52,7 +53,7 @@ func (wt *DefaultWebhookTester) receiverHandler(w http.ResponseWriter, r *http.R
 		panic(err)
 	}
 	var correlationId string
-	if wt.config.Test.Pickers.CorrelationPicker.GetRootType() == RootBody {
+	if wt.config.Test.Pickers.CorrelationPicker.GetRootType() == types.RootBody {
 		correlationId = *wt.config.Test.Pickers.CorrelationPicker.GetByLocator(&resMap)
 	}
 	_tracker := wt.internal.reqTracker.Get(correlationId)
@@ -88,7 +89,7 @@ func (wt *DefaultWebhookTester) FireRequests() error {
 
 			injectors := wt.config.Test.Injectors
 
-			if injectors.CorrelationIDInjector.GetRootType() == RootBody {
+			if injectors.CorrelationIDInjector.GetRootType() == types.RootBody {
 				slog.Debug("Setting correlationId to body", "key", injectors.CorrelationIDInjector.GetKey())
 				injectors.CorrelationIDInjector.SetToLocator(
 					&tmp,
@@ -96,7 +97,7 @@ func (wt *DefaultWebhookTester) FireRequests() error {
 				)
 			}
 
-			if injectors.ReplyPathInjector.GetRootType() == RootBody {
+			if injectors.ReplyPathInjector.GetRootType() == types.RootBody {
 				slog.Debug("Setting replyPath to body", "key", injectors.ReplyPathInjector.GetKey())
 				injectors.ReplyPathInjector.SetToLocator(
 					&tmp,
@@ -128,7 +129,7 @@ func (wt *DefaultWebhookTester) FireRequests() error {
 				}
 			}
 
-			if injectors.CorrelationIDInjector.GetRootType() == RootHeader {
+			if injectors.CorrelationIDInjector.GetRootType() == types.RootHeader {
 				slog.Debug("Setting correlation to header")
 				req.Header.Add(
 					injectors.CorrelationIDInjector.GetKey(),
@@ -136,7 +137,7 @@ func (wt *DefaultWebhookTester) FireRequests() error {
 				)
 			}
 
-			if injectors.ReplyPathInjector.GetRootType() == RootHeader {
+			if injectors.ReplyPathInjector.GetRootType() == types.RootHeader {
 				slog.Debug(
 					"Setting replyPath to header",
 					"key", injectors.ReplyPathInjector.GetKey(),
@@ -170,15 +171,15 @@ func (wt *DefaultWebhookTester) FireRequests() error {
 func (wt *DefaultWebhookTester) LoadConfig() error {
 	slog.Info("Loading and validating config...")
 	injectors := wt.config.Test.Injectors
-	if corrRootType := injectors.CorrelationIDInjector.GetRootType(); corrRootType == RootUnknown {
+	if corrRootType := injectors.CorrelationIDInjector.GetRootType(); corrRootType == types.RootUnknown {
 		return errors.New("Unknown root type: " + injectors.CorrelationIDInjector.GetRootTypeString())
 	}
-	if replyPathRootType := injectors.ReplyPathInjector.GetRootType(); replyPathRootType == RootUnknown {
+	if replyPathRootType := injectors.ReplyPathInjector.GetRootType(); replyPathRootType == types.RootUnknown {
 		return errors.New("Unknown root type: " + injectors.ReplyPathInjector.GetRootTypeString())
 	}
 
 	pickers := wt.config.Test.Pickers
-	if corrPickerRt := pickers.CorrelationPicker.GetRootType(); corrPickerRt == RootUnknown {
+	if corrPickerRt := pickers.CorrelationPicker.GetRootType(); corrPickerRt == types.RootUnknown {
 		return errors.New("Unknown root type: " + pickers.CorrelationPicker.GetRootTypeString())
 	}
 
@@ -207,7 +208,7 @@ func (wt *DefaultWebhookTester) PostProcess() error {
 		case "stdout":
 			reporter.PrintTextMetrics(os.Stdout, metrics)
 		default:
-			return UnsupportedOutputErr
+			return types.UnsupportedOutputErr
 		}
 	}
 
@@ -312,12 +313,12 @@ func (wt *DefaultWebhookTester) WaitForResults() error {
 		slog.Info("Finished waiting within timeout")
 	case <-time.After(timeout):
 		slog.Error("Timed out while waiting for 2mins")
-		return TimedOutWaitingForResultsErr
+		return types.TimedOutWaitingForResultsErr
 	}
 	return nil
 }
 
-func NewDefaultWebhookTester(config *InputConfig) *DefaultWebhookTester {
+func NewDefaultWebhookTester(config *types.InputConfig) *DefaultWebhookTester {
 	wt := &DefaultWebhookTester{
 		config: config,
 	}

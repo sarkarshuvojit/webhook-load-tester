@@ -13,6 +13,7 @@ import (
 
 	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
+	"com.github/sarkarshuvojit/webhook-load-tester/pkg/webhook_tester"
 	"gopkg.in/yaml.v3"
 )
 
@@ -83,7 +84,7 @@ func main() {
 	utils.PPrinter.Info("Config loaded successfully...")
 	slog.Debug("Starting with config", "config", config)
 
-	wt := types.NewDefaultWebhookTester(config)
+	wt := webhook_tester.NewDefaultWebhookTester(config)
 	if err = wt.LoadConfig(); err != nil {
 		utils.PPrinter.Error("Failed to load config due to: %v", err.Error())
 		os.Exit(1)
