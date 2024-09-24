@@ -1,10 +1,19 @@
 # webhook-load-tester
 
-[![asciicast](https://asciinema.org/a/677396.svg)](https://asciinema.org/a/677396)
 
 ## What is this?
 
 This tool helps developers test and load test asynchronous APIs that use webhooks. It's especially useful when you're working with APIs where the response comes later through a webhook, rather than immediately.
+
+### Demos
+
+#### Capturing Webhook Responses from a Local Service
+
+[![asciicast](https://asciinema.org/a/677409.svg)](https://asciinema.org/a/677409)
+
+#### Capture Webhook Responses Locally from External Services via Ngrok
+
+[![asciicast](https://asciinema.org/a/677410.svg)](https://asciinema.org/a/677410)
 
 ## Why use it?
 
@@ -26,6 +35,7 @@ Testing webhook-based APIs can be tricky because:
 ## Key Features
 
 - Easy-to-use YAML configuration for test scenarios
+- Use Ngrok to load test webhooks from your local machine
 - Built-in mock server to capture webhook responses
 - Comprehensive timing measurements for the entire API flow
 - Support for load testing asynchronous APIs

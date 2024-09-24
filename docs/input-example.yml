@@ -18,12 +18,12 @@ test:
       path: "body.uniqueId"
 
 run:
-  iterations: 1000
+  iterations: 50
   durationSeconds: 10
 
 outputs:
-  - type: text
-    path: out.txt
+  #- type: text
+  #  path: out.txt
   - type: stdout
 
-# server: ngrok
+server: ngrok

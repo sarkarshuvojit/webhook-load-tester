@@ -13,9 +13,7 @@ import (
 
 func sleepRandomly(minSleep, maxSleep int) {
 	randSleep := rand.Intn(maxSleep)
-	slog.Info("Sleeping", "ttl", minSleep+randSleep)
 	time.Sleep(time.Duration(minSleep+randSleep) * time.Second)
-	slog.Info("Slept", "ttl", minSleep+randSleep)
 }
 
 func dumpHttpDetails(r *http.Request) {
@@ -41,7 +39,7 @@ func dumpHttpDetails(r *http.Request) {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// Read the `webhook-reply-to` header
-	dumpHttpDetails(r)
+	// dumpHttpDetails(r)
 	replyToURL := r.Header.Get("webhook-reply-to")
 	if replyToURL == "" {
 		http.Error(w, "Missing 'webhook-reply-to' header", http.StatusBadRequest)
