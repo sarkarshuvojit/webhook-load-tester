@@ -1,5 +1,7 @@
 # webhook-load-tester
 
+[![asciicast](https://asciinema.org/a/677396.svg)](https://asciinema.org/a/677396)
+
 ## What is this?
 
 This tool helps developers test and load test asynchronous APIs that use webhooks. It's especially useful when you're working with APIs where the response comes later through a webhook, rather than immediately.
@@ -38,8 +40,6 @@ Testing webhook-based APIs can be tricky because:
 ## Design
 
 ![Overview](docs/overview.png "Overview of design")
-
-[![asciicast](https://asciinema.org/a/iPDFUjZSNDOpd2o9sgtI9tcpj.svg)](https://asciinema.org/a/iPDFUjZSNDOpd2o9sgtI9tcpj)
 
 ## Configuration 
 
