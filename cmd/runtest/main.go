@@ -99,4 +99,10 @@ func main() {
 	} else {
 		utils.PPrinter.Success("Received webhook responses within timeout.")
 	}
+	utils.PPrinter.Info("Starting post processing...")
+	if err := wt.PostProcess(); err != nil {
+		utils.PPrinter.Error(fmt.Sprintf("Failed to post process: %v", err))
+	} else {
+		utils.PPrinter.Success("Post processing complete.")
+	}
 }

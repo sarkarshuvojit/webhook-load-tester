@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
+	"com.github/sarkarshuvojit/webhook-load-tester/pkg/reporter"
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/tracker"
 	"github.com/google/uuid"
 	"golang.ngrok.com/ngrok"
@@ -186,8 +186,32 @@ func (wt *DefaultWebhookTester) LoadConfig() error {
 }
 
 // PostProcess implements WebhookTesterv2.
-func (*DefaultWebhookTester) PostProcess() error {
-	panic("unimplemented")
+func (wt *DefaultWebhookTester) PostProcess() error {
+	allReqs := wt.internal.reqTracker.GetAll()
+	tp := []tracker.RequestTrackerPair{}
+	for _, v := range allReqs {
+		tp = append(tp, v)
+	}
+
+	metrics := reporter.CalculateMetrics(tp, time.Duration(wt.config.Run.DurationSeconds)*time.Second)
+
+	for _, output := range wt.config.Outputs {
+		switch output.Type {
+		case "text":
+			w, err := os.Create(output.Path)
+			defer w.Close()
+			if err != nil {
+				return err
+			}
+			reporter.PrintTextMetrics(w, metrics)
+		case "stdout":
+			reporter.PrintTextMetrics(os.Stdout, metrics)
+		default:
+			return UnsupportedOutputErr
+		}
+	}
+
+	return nil
 }
 
 func (wt *DefaultWebhookTester) startHttpServer() (context.CancelFunc, error) {
@@ -276,7 +300,6 @@ func (wt *DefaultWebhookTester) StartReceiver() (cancelFunc context.CancelFunc, 
 
 // WaitForResults implements WebhookTesterv2.
 func (wt *DefaultWebhookTester) WaitForResults() error {
-	utils.PPrinter.Info("Started waiting for results...")
 	timeout := time.Duration(wt.config.Test.Timeout) * time.Second
 	slog.Info("Waiting for results...", "timeout", timeout)
 	waitingFinished := make(chan bool)
