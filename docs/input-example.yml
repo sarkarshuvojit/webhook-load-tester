@@ -4,7 +4,7 @@ test:
   name: test-api-1
   url: http://localhost:8080/
   body: "{\"message\": \"ok\"}"
-  timeout: 5
+  timeout: 60
   headers:
     client-id: gg
     client-secret: wp
@@ -18,7 +18,7 @@ test:
       path: "body.uniqueId"
 
 run:
-  iterations: 50
+  iterations: 500
   durationSeconds: 10
 
 outputs:

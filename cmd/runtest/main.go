@@ -83,7 +83,7 @@ func main() {
 	utils.PPrinter.Info("Config loaded successfully...")
 	slog.Debug("Starting with config", "config", config)
 
-	wt := types.NewDefaultWebhookTesterv2(config)
+	wt := types.NewDefaultWebhookTester(config)
 	if err = wt.LoadConfig(); err != nil {
 		utils.PPrinter.Error("Failed to load config due to: %v", err.Error())
 		os.Exit(1)
