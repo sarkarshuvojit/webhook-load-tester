@@ -1,9 +1,11 @@
-package main
+/*
+Copyright © 2024 Shuvojit Sarkar <s15sarkar@yahoo.com>
+*/
+package cmd
 
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"log/slog"
@@ -14,19 +16,9 @@ import (
 	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
 	"com.github/sarkarshuvojit/webhook-load-tester/pkg/webhook_tester"
-	"gopkg.in/yaml.v3"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
-
-var isVerbose bool
-var configPath string
-
-var DEFAULT_WAITING_TIMEOUT = time.Duration(30) * time.Second
-
-func setupFlags() {
-	flag.BoolVar(&isVerbose, "v", false, "Enable Verbosity")
-	flag.StringVar(&configPath, "f", "wlt-run-defatult.yaml", "Path to your test config file")
-	flag.Parse()
-}
 
 func setupLogger(isVerbose bool) {
 	if *&isVerbose {
@@ -38,10 +30,7 @@ func setupLogger(isVerbose bool) {
 	}
 }
 
-func initialize() {
-	setupFlags()
-	setupLogger(isVerbose)
-}
+var DEFAULT_WAITING_TIMEOUT = time.Duration(30) * time.Second
 
 func setDefaults(config *types.InputConfig) {
 	if config.Test.Timeout == 0 {
@@ -72,9 +61,7 @@ func loadConfig(filepath string) (*types.InputConfig, error) {
 	return &config, nil
 }
 
-func main() {
-	initialize()
-
+func runTest(configPath string) {
 	config, err := loadConfig(configPath)
 	if err != nil {
 		utils.PPrinter.Error("Failed due to: ", err.Error())
@@ -105,4 +92,39 @@ func main() {
 	} else {
 		utils.PPrinter.Success("Post processing complete.")
 	}
+}
+
+// runCmd represents the run command
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Execute a specific webhook test configuration",
+	Long: `The run command executes a specific webhook test configuration defined in a YAML file.
+
+This command allows you to:
+- Run a single test scenario
+- Measure the complete API flow from initial call to webhook response
+- Capture and display webhook responses
+- Generate detailed timing and performance metrics
+
+Usage:
+  webhook-load-tester run --config <path-to-config-file.yaml>
+
+Example:
+  webhook-load-tester run --config ./tests/payment-api-test.yaml`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		isVerbose, _ := cmd.Flags().GetBool("verbose")
+		setupLogger(isVerbose)
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("run called")
+		configPath, _ := cmd.Flags().GetString("config")
+		runTest(configPath)
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(runCmd)
+
+	runCmd.Flags().StringP("config", "c", "wlt.yaml", "Path to create the new test config")
+	runCmd.MarkFlagRequired("config")
 }

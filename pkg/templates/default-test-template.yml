@@ -1,0 +1,58 @@
+# Configuration version
+version: v1
+
+# Test configuration
+test:
+  # Name of the test scenario
+  name: test-api-1
+  
+  # URL of the API endpoint to be tested
+  url: http://localhost:8080/
+  
+  # Request body to be sent to the API
+  body: "{\"message\": \"ok\"}"
+  
+  # Timeout for the responses to come back once all APIs are fired
+  timeout: 60
+  
+  # Headers to be sent with the API request
+  headers:
+    client-id: gg
+    client-secret: wp
+  
+  # Injectors: Used to dynamically insert data into the request
+  injectors:
+    # Injects the reply URL for the webhook
+    replyPathInjector:
+      path: "headers.webhook-reply-to"
+    
+    # Injects a unique correlation ID
+    correlationIdInjector:
+      path: "body.uniqueId"
+  
+  # Pickers: Used to extract data from the API response
+  pickers:
+    # Extracts the correlation ID from the response
+    correlationPicker:
+      path: "body.uniqueId"
+
+# Run configuration
+run:
+  # Number of times to run the test
+  iterations: 1000
+  
+  # Duration of the request initiation
+  # In this case the rps will be 1000/10 = 100rps
+  durationSeconds: 10
+
+# Output configuration
+outputs:
+  # Save results to a text file
+  - type: text
+    path: out.txt
+  
+  # Print results to standard output
+  - type: stdout
+
+# Uncomment the following line to use ngrok for exposing local server
+# server: ngrok
