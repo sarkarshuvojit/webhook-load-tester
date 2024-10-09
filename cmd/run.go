@@ -116,7 +116,6 @@ Example:
 		setupLogger(isVerbose)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("run called")
 		configPath, _ := cmd.Flags().GetString("config")
 		runTest(configPath)
 	},
