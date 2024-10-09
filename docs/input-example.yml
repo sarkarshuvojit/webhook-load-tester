@@ -18,7 +18,7 @@ test:
       path: "body.uniqueId"
 
 run:
-  iterations: 50
+  iterations: 1000
   durationSeconds: 10
 
 outputs:
@@ -26,4 +26,4 @@ outputs:
   #  path: out.txt
   - type: stdout
 
-server: ngrok
+#server: ngrok
