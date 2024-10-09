@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/webhook_tester"
+	"github.com/sarkarshuvojit/webhook-load-tester/internal/utils"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/types"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/webhook_tester"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )

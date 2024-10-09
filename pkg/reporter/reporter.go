@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/tracker"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/tracker"
 )
 
 type Metrics struct {

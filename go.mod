@@ -1,4 +1,4 @@
-module com.github/sarkarshuvojit/webhook-load-tester
+module github.com/sarkarshuvojit/webhook-load-tester
 
 go 1.21.0
 

@@ -15,9 +15,9 @@ import (
 	"syscall"
 	"time"
 
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/reporter"
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/tracker"
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/types"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/reporter"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/tracker"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/types"
 	"github.com/google/uuid"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"

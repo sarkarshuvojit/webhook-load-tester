@@ -4,8 +4,8 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"com.github/sarkarshuvojit/webhook-load-tester/internal/utils"
-	"com.github/sarkarshuvojit/webhook-load-tester/pkg/templates"
+	"github.com/sarkarshuvojit/webhook-load-tester/internal/utils"
+	"github.com/sarkarshuvojit/webhook-load-tester/pkg/templates"
 	"github.com/spf13/cobra"
 )
 
