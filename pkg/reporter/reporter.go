@@ -30,7 +30,7 @@ func CalculateMetrics(pairs []tracker.RequestTrackerPair, totalDuration time.Dur
 	var minDuration time.Duration = pairs[0].EndTime.Sub(pairs[0].StartTime)
 	var maxDuration time.Duration = minDuration
 	durations := make([]time.Duration, 0, totalRequests)
-	durationsTotal := 0
+	durationsMsTotal := 0
 
 	for _, pair := range pairs {
 		duration := pair.EndTime.Sub(pair.StartTime)
@@ -43,7 +43,7 @@ func CalculateMetrics(pairs []tracker.RequestTrackerPair, totalDuration time.Dur
 			maxDuration = duration
 		}
 
-		durationsTotal += int(duration.Seconds())
+		durationsMsTotal += int(duration.Milliseconds())
 	}
 
 	// Sort durations to calculate median and percentile
@@ -62,7 +62,11 @@ func CalculateMetrics(pairs []tracker.RequestTrackerPair, totalDuration time.Dur
 	percentile95Time := durations[index95]
 
 	// Calculate average response time
-	averageResponseTime := time.Duration(durationsTotal/totalRequests) * time.Second
+	slog.Debug("About to calculate average",
+		"totalRequests", totalRequests,
+		"durationsTotal", durationsMsTotal,
+	)
+	averageResponseTime := time.Duration(durationsMsTotal/totalRequests) * time.Millisecond
 
 	// Calculate requests per second
 	totalTimeFrame := pairs[totalRequests-1].EndTime.Sub(pairs[0].StartTime)
