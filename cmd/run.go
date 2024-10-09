@@ -21,7 +21,7 @@ import (
 )
 
 func setupLogger(isVerbose bool) {
-	if *&isVerbose {
+	if isVerbose {
 		slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		})))
@@ -111,9 +111,13 @@ Usage:
 
 Example:
   webhook-load-tester run --config ./tests/payment-api-test.yaml`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		isVerbose, _ := cmd.Flags().GetBool("verbose")
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		isVerbose, err := rootCmd.PersistentFlags().GetBool("verbose")
+		if err != nil {
+			return err
+		}
 		setupLogger(isVerbose)
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		configPath, _ := cmd.Flags().GetString("config")
