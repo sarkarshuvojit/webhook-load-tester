@@ -77,15 +77,25 @@ func runTest(configPath string) {
 	}
 
 	utils.PPrinter.Info("Started receiver...")
-	wt.StartReceiver()
+	cancelReciever, err := wt.StartReceiver()
+	defer cancelReciever()
+	if err != nil {
+		utils.PPrinter.Error(
+			fmt.Sprintf("Failed to start receiver: %v", err.Error()),
+		)
+		os.Exit(1)
+	}
+
 	utils.PPrinter.Info("Firing requests...")
 	wt.FireRequests()
+
 	utils.PPrinter.Info(fmt.Sprintf("Waiting for responses for %ds...", config.Test.Timeout))
 	if err := wt.WaitForResults(); err != nil {
 		utils.PPrinter.Warning(fmt.Sprintf("Timed out waiting for %ds", config.Test.Timeout))
 	} else {
 		utils.PPrinter.Success("Received webhook responses within timeout.")
 	}
+
 	utils.PPrinter.Info("Starting post processing...")
 	if err := wt.PostProcess(); err != nil {
 		utils.PPrinter.Error(fmt.Sprintf("Failed to post process: %v", err))
