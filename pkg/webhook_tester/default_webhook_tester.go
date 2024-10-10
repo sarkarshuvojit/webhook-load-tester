@@ -15,10 +15,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sarkarshuvojit/webhook-load-tester/pkg/reporter"
 	"github.com/sarkarshuvojit/webhook-load-tester/pkg/tracker"
 	"github.com/sarkarshuvojit/webhook-load-tester/pkg/types"
-	"github.com/google/uuid"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
 )
@@ -250,6 +250,10 @@ func (wt *DefaultWebhookTester) startHttpServer() (context.CancelFunc, error) {
 func (wt *DefaultWebhookTester) startNgrokServer() (context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	if _, found := os.LookupEnv("NGROK_AUTHTOKEN"); !found {
+		return cancel, types.NgrokAuthMissingErr
+	}
+
 	go func() {
 		// Handle system interrupts and termination signals
 		sigCh := make(chan os.Signal, 1)
@@ -296,7 +300,7 @@ func (wt *DefaultWebhookTester) StartReceiver() (cancelFunc context.CancelFunc, 
 	} else {
 		cancelFunc, err = wt.startHttpServer()
 	}
-	return
+	return cancelFunc, err
 }
 
 // WaitForResults implements WebhookTesterv2.
