@@ -126,6 +126,7 @@ Example:
 		if err != nil {
 			return err
 		}
+		// FIXME: should run in rootCmd not run cmd
 		setupLogger(isVerbose)
 		return nil
 	},
