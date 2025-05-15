@@ -1,0 +1,29 @@
+version: v1
+
+test:
+  name: test-api-2
+  url: http://localhost:9000/
+  body: "{\"image_url\": \"https://example.com/img.jpg\", \"size\": \"1024x768\"}"
+  timeout: 60
+  headers:
+    client-id: gg
+    client-secret: wp
+  injectors:
+    replyPathInjector:
+      path: "headers.webhook-reply-to"
+    correlationIdInjector:
+      path: "headers.correlation-id"
+  pickers:
+    correlationPicker:
+      path: "body.correlation_id"
+
+run:
+  iterations: 10
+  durationSeconds: 10
+
+outputs:
+  #- type: text
+  #  path: out.txt
+  - type: stdout
+
+#server: ngrok
