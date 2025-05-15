@@ -103,6 +103,10 @@ run:
 outputs:
   - type: text
     path: out.txt
+
+# Uncomment the following line to use ngrok for exposing local server
+# NGROK_AUTHTOKEN is required in the environment variables when using this mode
+# server: ngrok
 ```
 
 ## Setting up locally
