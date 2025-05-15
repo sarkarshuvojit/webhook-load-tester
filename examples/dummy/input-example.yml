@@ -1,0 +1,29 @@
+version: v1
+
+test:
+  name: test-api-1
+  url: http://localhost:8080/
+  body: "{\"message\": \"ok\"}"
+  timeout: 60
+  headers:
+    client-id: gg
+    client-secret: wp
+  injectors:
+    replyPathInjector:
+      path: "headers.webhook-reply-to"
+    correlationIdInjector:
+      path: "body.uniqueId"
+  pickers:
+    correlationPicker:
+      path: "body.uniqueId"
+
+run:
+  iterations: 1000
+  durationSeconds: 10
+
+outputs:
+  #- type: text
+  #  path: out.txt
+  - type: stdout
+
+#server: ngrok

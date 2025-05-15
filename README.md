@@ -116,7 +116,8 @@ outputs:
 Start a simple webhook api
 
 ```bash
-$ make start_dummy
+$ cd examples/dummy
+$ go run main.go
 ```
 
 ### Start tests  
@@ -126,8 +127,8 @@ Start the actual tester
 #### Using Go
 
 ```bash
-$ go run cmd/runtest/main.go -v -f docs/input-example.yml
-$ go run cmd/runtest/main.go -f docs/input-example.yml # for verbose output
+$ go run cmd/runtest/main.go -f examples/dummy/input-example.yml 
+$ go run cmd/runtest/main.go -v -f examples/dummy/input-example.yml # for verbose output
 ```
 
 ## TODO
