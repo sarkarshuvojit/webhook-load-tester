@@ -55,13 +55,13 @@ func updateMap(m *map[string]interface{}, keys []string, value string) {
 
 	// Intermediate keys, ensure the key exists and is a map
 	if _, exists := (*m)[key]; !exists {
-		(*m)[key] = make(map[string]interface{})
+		(*m)[key] = make(map[string]any)
 	}
-	subMap, ok := (*m)[key].(map[string]interface{})
+	subMap, ok := (*m)[key].(map[string]any)
 	if !ok {
 		// If the existing value is not a map, we need to handle the conflict.
 		// For simplicity, let's clear the existing value and replace it with a map.
-		subMap = make(map[string]interface{})
+		subMap = make(map[string]any)
 		(*m)[key] = subMap
 	}
 
@@ -69,16 +69,16 @@ func updateMap(m *map[string]interface{}, keys []string, value string) {
 	updateMap(&subMap, keys[1:], value)
 }
 
-func (l Locator) SetToLocator(target *map[string]interface{}, value string) {
+func (l Locator) SetToLocator(target *map[string]any, value string) {
 	updateMap(target, l.GetKeys(), value)
 }
 
-func (l Locator) GetByLocator(target *map[string]interface{}) *string {
+func (l Locator) GetByLocator(target *map[string]any) *any {
 	return getFromMap(*target, l.GetKeys())
 }
 
 // getFromMap recursively retrieves a value from the map based on the provided keys
-func getFromMap(m map[string]interface{}, keys []string) *string {
+func getFromMap(m map[string]any, keys []string) *any {
 	if len(keys) == 0 {
 		return nil
 	}
@@ -86,7 +86,11 @@ func getFromMap(m map[string]interface{}, keys []string) *string {
 	key := keys[0]
 	if len(keys) == 1 {
 		// Last key, return the value
-		value := (m[key].(string))
+		value, exists := m[key]
+		if !exists {
+			return nil
+		}
+
 		return &value
 	}
 
@@ -96,7 +100,7 @@ func getFromMap(m map[string]interface{}, keys []string) *string {
 		return nil
 	}
 
-	subMap, ok := val.(map[string]interface{})
+	subMap, ok := val.(map[string]any)
 	if !ok {
 		// If the value is not a map, the path is invalid
 		return nil

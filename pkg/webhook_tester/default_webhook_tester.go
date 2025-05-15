@@ -47,14 +47,15 @@ func (wt *DefaultWebhookTester) receiverHandler(w http.ResponseWriter, r *http.R
 	slog.Debug("Received New Message", "body", reqBodyStr)
 	// pick correlationId
 	// save in common concurrent hashmap
-	var resMap map[string]interface{}
+	var resMap map[string]any
 	err := json.Unmarshal(bytedata, &resMap)
 	if err != nil {
 		panic(err)
 	}
 	var correlationId string
 	if wt.config.Test.Pickers.CorrelationPicker.GetRootType() == types.RootBody {
-		correlationId = *wt.config.Test.Pickers.CorrelationPicker.GetByLocator(&resMap)
+		// TODO: Add error handling here, what if it's not found?
+		correlationId = (*wt.config.Test.Pickers.CorrelationPicker.GetByLocator(&resMap)).(string)
 	}
 	_tracker := wt.internal.reqTracker.Get(correlationId)
 	_tracker.EndTime = time.Now()
@@ -79,7 +80,7 @@ func (wt *DefaultWebhookTester) FireRequests() error {
 		})
 
 		go func() error {
-			var tmp map[string]interface{}
+			var tmp map[string]any
 			reqBodyBytes := []byte(wt.config.Test.Body)
 			err := json.Unmarshal(reqBodyBytes, &tmp)
 			if err != nil {
@@ -266,7 +267,7 @@ func (wt *DefaultWebhookTester) startNgrokServer() (context.CancelFunc, error) {
 			ngrok.WithAuthtokenFromEnv(),
 		)
 		if err != nil {
-			slog.Error("Error setting up ngrok:", err)
+			slog.Error("Error setting up ngrok:", "error", err)
 			os.Exit(1)
 			return
 		}
