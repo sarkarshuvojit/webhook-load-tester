@@ -5,7 +5,36 @@
 
 This tool helps developers test and load test asynchronous APIs that use webhooks. It's especially useful when you're working with APIs where the response comes later through a webhook, rather than immediately.
 
-### Demos
+## Installation 
+
+### CLI Tool
+
+Install the command-line interface tool:
+
+```bash
+go install github.com/sarkarshuvojit/webhook-load-tester@latest
+```
+
+## Usage 
+
+### Create config
+
+Create a empty config file as starting point
+
+```bash
+$ webhook-load-tester create -c 001-test.yaml
+
+```
+
+### Run test from config
+
+Run tests for that config file by passing with a `-c` flag
+
+```bash
+$ webhook-load-tester test -c 001-test.yaml
+```
+
+## Demos
 
 #### Capturing Webhook Responses from a Local Service
 
