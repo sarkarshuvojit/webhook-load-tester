@@ -1,5 +1,6 @@
 # webhook-load-tester
 
+📄 **[Read the Whitepaper](docs/whitepaper.md)** - Deep dive into the technical details and architecture
 
 ## What is this?
 
