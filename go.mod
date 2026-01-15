@@ -4,6 +4,7 @@ go 1.21.0
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/jamiealquiza/tachymeter v2.0.0+incompatible
 	github.com/sarkarshuvojit/pprinter v0.0.7
 	github.com/spf13/cobra v1.8.1
 	golang.ngrok.com/ngrok v1.10.0

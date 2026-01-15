@@ -2,9 +2,9 @@ package reporter
 
 import (
 	"log/slog"
-	"sort"
 	"time"
 
+	"github.com/jamiealquiza/tachymeter"
 	"github.com/sarkarshuvojit/webhook-load-tester/pkg/tracker"
 )
 
@@ -27,59 +27,22 @@ func CalculateMetrics(pairs []tracker.RequestTrackerPair, totalDuration time.Dur
 		return Metrics{}
 	}
 
-	var minDuration time.Duration = pairs[0].EndTime.Sub(pairs[0].StartTime)
-	var maxDuration time.Duration = minDuration
-	durations := make([]time.Duration, 0, totalRequests)
-	durationsMsTotal := 0
+	t := tachymeter.New(&tachymeter.Config{Size: totalRequests})
 
 	for _, pair := range pairs {
-		duration := pair.EndTime.Sub(pair.StartTime)
-		durations = append(durations, duration)
-
-		if duration < minDuration {
-			minDuration = duration
-		}
-		if duration > maxDuration {
-			maxDuration = duration
-		}
-
-		durationsMsTotal += int(duration.Milliseconds())
+		t.AddTime(pair.EndTime.Sub(pair.StartTime))
 	}
 
-	// Sort durations to calculate median and percentile
-	sort.Slice(durations, func(i, j int) bool {
-		return durations[i] < durations[j]
-	})
-
-	// Calculate median
-	medianResponseTime := durations[totalRequests/2]
-	if totalRequests%2 == 0 {
-		medianResponseTime = (durations[totalRequests/2-1] + durations[totalRequests/2]) / 2
-	}
-
-	// Calculate 95th percentile (rounded down)
-	index95 := int(float64(totalRequests) * 0.95)
-	percentile95Time := durations[index95]
-
-	// Calculate average response time
-	slog.Debug("About to calculate average",
-		"totalRequests", totalRequests,
-		"durationsTotal", durationsMsTotal,
-	)
-	averageResponseTime := time.Duration(durationsMsTotal/totalRequests) * time.Millisecond
-
-	// Calculate requests per second
-	totalTimeFrame := pairs[totalRequests-1].EndTime.Sub(pairs[0].StartTime)
-	requestsPerSecond := float64(totalRequests) / totalTimeFrame.Seconds()
+	results := t.Calc()
 
 	return Metrics{
 		TotalRequests:       totalRequests,
 		TotalDuration:       totalDuration,
-		AverageResponseTime: averageResponseTime,
-		MinResponseTime:     minDuration,
-		MaxResponseTime:     maxDuration,
-		MedianResponseTime:  medianResponseTime,
-		Percentile95Time:    percentile95Time,
-		RequestsPerSecond:   requestsPerSecond,
+		AverageResponseTime: results.Time.Avg,
+		MinResponseTime:     results.Time.Min,
+		MaxResponseTime:     results.Time.Max,
+		MedianResponseTime:  results.Time.P50,
+		Percentile95Time:    results.Time.P95,
+		RequestsPerSecond:   results.Rate.Second,
 	}
 }
