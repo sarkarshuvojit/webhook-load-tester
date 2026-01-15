@@ -200,7 +200,7 @@ func (wt *DefaultWebhookTester) PostProcess() error {
 	for _, output := range wt.config.Outputs {
 		switch output.Type {
 		case "text":
-			w, err := os.Create(output.Path)
+			w, err := createFileWithParentDirs(output.Path)
 			defer w.Close()
 			if err != nil {
 				return err
